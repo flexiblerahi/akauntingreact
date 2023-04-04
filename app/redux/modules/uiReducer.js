@@ -1,0 +1,141 @@
+import produce from 'immer';
+import MenuContent from 'enl-api/ui/menu';
+import {
+  TOGGLE_SIDEBAR,
+  OPEN_MENU,
+  OPEN_SUBMENU,
+  CHANGE_THEME,
+  CHANGE_MODE,
+  CHANGE_LAYOUT,
+  CHANGE_DIRECTION,
+  LOAD_PAGE,
+  CLOSE_MENU,
+  TOGGLE_RIGHT_SIDEBAR,
+  OPEN_RIGHT_SIDEBAR,
+  CLOSE_RIGHT_SIDEBAR,
+  TOGGLE_CREATE_NEW_ITEM_DRAWER
+} from '../constants/uiConstants';
+
+const initialState = {
+  /* Settings for Themes and layout */
+  theme: 'blueTheme',
+  type: 'light', // light or dark
+  direction: 'ltr', // ltr or rtl
+  layout: 'big-sidebar', // sidebar, big-sidebar, top-navigation, mega-menu
+  /* End settings */
+  palette: [
+    { name: 'Red', value: 'redTheme' },
+    { name: 'Green', value: 'greenTheme' },
+    { name: 'Blue', value: 'blueTheme' },
+    { name: 'Purple', value: 'purpleTheme' },
+    { name: 'Orange', value: 'orangeTheme' },
+    { name: 'Grey', value: 'greyTheme' },
+    { name: 'Green Light', value: 'lightGreenTheme' },
+    { name: 'Blue Light', value: 'lightBlueTheme' },
+    { name: 'Brown', value: 'brownTheme' },
+  ],
+  sidebarOpen: false,
+  pageLoaded: false,
+  subMenuOpen: [],
+  rightSidebar: false,
+  optionButton: true,
+  createItemDrawer: false,
+  columnVisibility: true
+};
+
+const getMenus = menuArray => menuArray.map(item => {
+  if (item.child) {
+    return item.child;
+  }
+  return false;
+});
+
+const setNavCollapse = (arr, curRoute) => {
+  let headMenu = 'not found';
+  for (let i = 0; i < arr.length; i += 1) {
+    for (let j = 0; j < arr[i].length; j += 1) {
+      if (arr[i][j].link === curRoute) {
+        headMenu = MenuContent[i].key;
+      }
+    }
+  }
+  return headMenu;
+};
+
+/* eslint-disable default-case, no-param-reassign */
+const uiReducer = (state = initialState, action = {}) => produce(state, draft => {
+  switch (action.type) {
+    case TOGGLE_SIDEBAR:
+      draft.sidebarOpen = !state.sidebarOpen;
+      break;
+    case OPEN_MENU:
+      draft.sidebarOpen = true;
+      break;
+    case CLOSE_MENU:
+      draft.sidebarOpen = false;
+      draft.subMenuOpen = [];
+      break;
+    case TOGGLE_RIGHT_SIDEBAR:
+      draft.rightSidebar = !state.rightSidebar;
+      draft.optionButton = !state.optionButton;
+      draft.columnVisibility = !state.columnVisibility;
+      break;
+    case OPEN_RIGHT_SIDEBAR:
+      draft.rightSidebar = true;
+      draft.optionButton = false;
+      draft.columnVisibility = false;
+      break;
+    case CLOSE_RIGHT_SIDEBAR:
+      draft.rightSidebar = false;
+      draft.optionButton = true;
+      draft.columnVisibility = true;
+      break;
+    case TOGGLE_CREATE_NEW_ITEM_DRAWER:
+      draft.createItemDrawer = !state.createItemDrawer;
+    case OPEN_SUBMENU: {
+      // Set initial open parent menu
+      const activeParent = setNavCollapse(
+        getMenus(MenuContent),
+        action.initialLocation
+      );
+
+      // Once page loaded will expand the parent menu
+      if (action.initialLocation) {
+        draft.subMenuOpen = [activeParent];
+        const path = action.initialLocation.split('/');
+        if (path.length <= 3 && action.initialLocation !== '/app') {
+          draft.sidebarOpen = false;
+        }
+        return;
+      }
+
+      // Expand / Collapse parent menu
+      const menuList = state.subMenuOpen;
+      if (menuList.indexOf(action.key) > -1) {
+        draft.subMenuOpen = [];
+      } else {
+        draft.subMenuOpen = [action.key, action.keyParent];
+      }
+      break;
+    }
+    case CHANGE_THEME:
+      draft.theme = action.theme;
+      break;
+    case CHANGE_MODE:
+      draft.type = action.mode;
+      break;
+    case CHANGE_LAYOUT:
+      draft.layout = action.layout;
+      break;
+    case CHANGE_DIRECTION:
+      draft.direction = action.direction;
+      break;
+    case LOAD_PAGE:
+      draft.pageLoaded = action.isLoaded;
+      break;
+    default:
+      break;
+  }
+});
+
+export default uiReducer;

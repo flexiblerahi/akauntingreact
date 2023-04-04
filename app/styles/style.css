@@ -1,0 +1,23 @@
+.MuiAccordion-root{
+    background: transparent !important;
+}
+.MuiAccordion-root:before{
+    background: transparent !important;
+}
+.MuiAccordionSummary-root{
+    padding: 0 10px !important;
+}
+.muiicon-text{
+    margin-left: 8px;
+    font-size: 1rem;
+}
+
+.text-purple{
+    --tw-text-opacity: 1;
+    color: rgb(85 88 139 / var(--tw-text-opacity));
+    text-decoration: none;
+    font-size: 0.875rem;
+}
+.MuiListItemText-primary{
+    font-size: 1rem !important;
+}
